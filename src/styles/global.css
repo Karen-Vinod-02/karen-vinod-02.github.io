@@ -1,0 +1,165 @@
+/* 1. Localized Font Hosting */
+@import "@fontsource/geist/400.css";
+@import "@fontsource/geist/500.css";
+@import "@fontsource/geist/600.css";
+@import "@fontsource/geist/700.css";
+@import "@fontsource/geist-mono/400.css";
+
+:root {
+  --bg: #fafafa;
+  --text: #1a1a1a;
+  --text-light: #525252;
+  --link: #3730a3;
+  --accent-hover: #4338ca;
+  --border: #e5e5e5;
+  --code-bg: #f4f4f5;
+
+  --fs-meta: 0.875rem;
+  --fs-body: 1.125rem;
+  --fs-h3: 1.35rem;
+  --fs-h2: 1.85rem;
+  --fs-h1: 2.5rem;
+
+  --font-heading: 'Geist', -apple-system, sans-serif;
+  --font-body: 'Geist', -apple-system, sans-serif;
+  --font-mono: 'Geist Mono', monospace;
+
+  --max-width: 900px;
+  --content-width: 900px;
+  --ease-fluid: cubic-bezier(0.25, 1, 0.5, 1);
+
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #09090b;
+  --text: #f4f4f5;
+  --text-light: #a1a1aa;
+  --link: #818cf8;
+  --accent-hover: #a5b4fc;
+  --border: #27272a;
+  --code-bg: #18181b;
+
+  color-scheme: dark;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.75;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  color-scheme: light dark;
+  transition: background-color 0.3s var(--ease-fluid), color 0.3s var(--ease-fluid);
+}
+
+h1, h2, h3 { font-family: var(--font-heading); color: var(--text); margin: 0; letter-spacing: -0.02em; }
+h1 { font-size: var(--fs-h1); font-weight: 700; line-height: 1.2; }
+h2 { font-size: var(--fs-h2); font-weight: 600; line-height: 1.25; }
+h3 { font-size: var(--fs-h3); font-weight: 600; line-height: 1.3; }
+p { font-size: var(--fs-body); color: var(--text); margin-bottom: 1.5rem; }
+
+.standard-page,
+.projects-page-wrapper,
+.experience-page-wrapper,
+.blog-index-page-wrapper {
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 4rem clamp(1rem, 5vw, 2rem);
+}
+
+.site-header {
+  width: 100%;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 1.25rem clamp(1rem, 5vw, 2rem);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-links { display: flex; gap: 2rem; align-items: center; }
+.nav-links a {
+  font-family: var(--font-body);
+  color: var(--text-light);
+  font-weight: 500;
+  font-size: var(--fs-meta);
+  text-decoration: none;
+  position: relative;
+  padding: 0.25rem 0;
+}
+.nav-links a:hover, .nav-links a[aria-current="page"] { color: var(--text); }
+.nav-links a[aria-current="page"]::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--text);
+}
+
+.button-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--text);
+  color: var(--bg) !important;
+  font-family: var(--font-body);
+  font-size: var(--fs-meta);
+  font-weight: 500;
+  padding: 0.5rem 1.25rem;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+.button-primary:hover { background: var(--link); }
+
+.theme-toggle { background: transparent; border: none; cursor: pointer; color: var(--text-light); padding: 0.5rem; }
+.theme-toggle:hover { color: var(--text); }
+
+.accessibility-skip-link {
+  position: absolute;
+  top: -100px;
+  left: 1rem;
+  z-index: 1000;
+  padding: 0.5rem 1rem;
+  background: var(--text);
+  color: var(--bg);
+  text-decoration: none;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+.accessibility-skip-link:focus { top: 1rem; }
+
+/* Mobile nav condensing */
+@media (max-width: 480px) {
+  .nav-links { gap: 1.25rem; }
+  .nav-links a { font-size: 0.8rem; }
+  h1 { font-size: 1.9rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.2rem; }
+
+  .standard-page,
+  .projects-page-wrapper,
+  .experience-page-wrapper,
+  .blog-index-page-wrapper {
+    padding: 2rem 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

@@ -1,0 +1,116 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('blog'))
+  .filter(post => !post.data.draft)
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+// Calculate reading time directly from raw markdown body string (assuming average 200 WPM)
+const getReadingTime = (body: string = '') => {
+  const words = body.trim().split(/\s+/).filter(Boolean).length;
+  const minutes = Math.ceil(words / 200);
+  return `${minutes} min read`;
+};
+---
+
+<Layout title="Writing - Karen Vinod">
+  <div class="blog-index-page-wrapper">
+    <header class="blog-index-header">
+      <h1>Writing</h1>
+      <p class="blog-index-subtitle">
+        Notes on tech, research, and everything in between.
+      </p>
+    </header>
+
+    <div class="articles-feed">
+      {posts.map((post) => (
+        <article class="feed-card">
+          <div class="feed-card-header">
+            <h2 class="feed-card-title">
+              <a href={`/blog/${post.id}`} class="feed-card-link">
+                {post.data.title}
+              </a>
+            </h2>
+            <div class="feed-card-meta-group">
+              <time datetime={post.data.date.toISOString()} class="feed-card-date">
+                {post.data.date.toISOString().split('T')[0]}
+              </time>
+              <span class="feed-card-reading-time">{getReadingTime(post.body)}</span>
+            </div>
+          </div>
+
+          <p class="feed-card-excerpt">{post.data.excerpt}</p>
+
+          <div class="feed-card-tags">
+            {post.data.tags.map(tag => (
+              <span class="feed-tag">#{tag}</span>
+            ))}
+          </div>
+        </article>
+      ))}
+    </div>
+
+    {posts.length === 0 && (
+      <p class="empty-feed-text">No articles published yet.</p>
+    )}
+  </div>
+</Layout>
+
+<style>
+  .blog-index-page-wrapper {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem clamp(1rem, 5vw, 2rem);
+    box-sizing: border-box;
+  }
+
+  .blog-index-header { margin-bottom: 4rem; }
+  .blog-index-subtitle { font-size: var(--fs-body); color: var(--text-light); margin-top: 0.85rem; line-height: 1.5; }
+  .articles-feed { display: flex; flex-direction: column; gap: 4.5rem; }
+
+  .feed-card { border-bottom: 1px solid var(--border); padding-bottom: 4rem; }
+  .feed-card:last-child { border-bottom: none; padding-bottom: 0; }
+
+  .feed-card-header { display: flex; justify-content: space-between; align-items: baseline; gap: 2rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .feed-card-title { margin: 0; font-size: var(--fs-h2); flex: 1; min-width: 280px; }
+
+  .feed-card-link {
+    color: var(--text) !important;
+    text-decoration: none !important;
+    transition: color 0.2s var(--ease-fluid);
+  }
+  .feed-card-link:hover {
+    color: var(--link) !important;
+  }
+
+  .feed-card-meta-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: var(--fs-meta);
+    color: var(--text-light);
+    white-space: nowrap;
+  }
+
+  .feed-card-date { color: var(--text-light); }
+
+  .feed-card-reading-time {
+    position: relative;
+    padding-left: 0.75rem;
+  }
+
+  .feed-card-reading-time::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: var(--border);
+  }
+
+  .feed-card-excerpt { font-size: var(--fs-body); line-height: 1.75; color: var(--text); margin: 0; }
+  .feed-card-tags { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; }
+  .feed-tag { font-size: var(--fs-meta); font-family: var(--font-mono); color: var(--text-light); }
+  .empty-feed-text { text-align: center; color: var(--text-light); font-style: italic; margin: 5rem 0; font-size: var(--fs-body); }
+</style>

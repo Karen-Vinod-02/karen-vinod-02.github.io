@@ -7,11 +7,28 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && npm run pagefind",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "pagefind": "npx pagefind --site dist --output-subdir pagefind",
+    "check": "astro check",
+    "audit:a11y": "astro build && npx axe dist/**/*.html"
   },
   "dependencies": {
-    "astro": "^6.2.2"
+    "@astrojs/rss": "^4.0.18",
+    "@astrojs/sitemap": "^3.7.3",
+    "@fontsource/geist": "^5.2.9",
+    "@fontsource/geist-mono": "^5.2.8",
+    "@fontsource/plus-jakarta-sans": "^5.2.8",
+    "astro": "^6.3.1",
+    "prismjs": "^1.30.0",
+    "rehype-katex": "^7.0.1",
+    "remark-math": "^6.0.0"
+  },
+  "devDependencies": {
+    "@axe-core/cli": "^4.11.3",
+    "@playwright/test": "^1.60.0",
+    "@types/node": "^25.9.1",
+    "pagefind": "^1.5.2"
   }
 }

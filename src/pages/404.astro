@@ -1,0 +1,39 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="404 - Page Not Found">
+  <div class="standard-page">
+    <div class="error-page">
+      <h1>404</h1>
+      <p class="message">Route not found.</p>
+      <a href="/" class="home-link">Return home →</a>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .error-page {
+    text-align: center;
+    padding: 6rem 1rem;
+  }
+
+  h1 {
+    font-size: 5rem;
+    color: var(--text-light);
+    margin-bottom: 1rem;
+    font-weight: 800;
+  }
+
+  .message {
+    font-size: 1.25rem;
+    color: var(--text-light);
+    margin-bottom: 2.5rem;
+  }
+
+  .home-link {
+    display: inline-block;
+    font-size: 1.05rem;
+    font-weight: 500;
+  }
+</style>

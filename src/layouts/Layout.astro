@@ -1,0 +1,148 @@
+---
+import '../styles/global.css';
+import SEO from '../components/SEO.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  article?: boolean;
+  pubDate?: string;
+}
+
+const { title = "Karen Vinod", description = "Computer Engineering ", image, article, pubDate } = Astro.props;
+
+const base = import.meta.env.BASE_URL;
+const currentPath = Astro.url.pathname;
+const formatPath = (path: string) => `${base}${path}`.replace(/\/+/g, '/');
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <SEO title={title} description={description} image={image} article={article} pubDate={pubDate} />
+
+  <script is:inline>
+    const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+  </script>
+</head>
+<body>
+  <a href="#main-skip-target" class="accessibility-skip-link">Skip to main content</a>
+
+  <header class="site-header" role="banner">
+    <div class="header-inner">
+      <a href={base} class="site-branding">karen m vinod</a>
+      
+      <div class="header-right-group">
+        <nav class="nav-links" aria-label="Main site navigation menu">
+          <a href={formatPath('projects')} aria-current={currentPath.startsWith(formatPath('projects')) ? 'page' : undefined}>projects</a>
+          <a href={formatPath('experience')} aria-current={currentPath.startsWith(formatPath('experience')) ? 'page' : undefined}>experience</a>
+          <a href={formatPath('blog')} aria-current={currentPath.startsWith(formatPath('blog')) ? 'page' : undefined}>writing</a>
+        </nav>
+        
+        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+          <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-skip-target" tabindex="-1" role="main">
+    <slot />
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <p>&copy; {new Date().getFullYear()} <a href="https://github.com/karen-vinod-02" target="_blank" rel="noopener">Karen Marlyn Vinod</a>. Some rights reserved.</p>
+    </div>
+  </footer>
+
+  <style is:inline>
+    .theme-toggle { background: transparent; border: none; cursor: pointer; padding: 0.5rem; display: flex; align-items: center; }
+    .theme-toggle .sun-icon { display: none; }
+    .theme-toggle .moon-icon { display: block; }
+    [data-theme="dark"] .theme-toggle .sun-icon { display: block; }
+    [data-theme="dark"] .theme-toggle .moon-icon { display: none; }
+    
+    .site-header {
+      width: 100%;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-inner {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 1.25rem clamp(1rem, 5vw, 2rem);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .site-branding {
+      font-family: var(--font-body);
+      font-weight: 500;
+      font-size: var(--fs-meta);
+      color: var(--text-light);
+      text-decoration: none;
+      transition: color 0.15s ease;
+    }
+    .site-branding:hover {
+      color: var(--text);
+    }
+
+    .header-right-group {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .site-footer {
+      margin-top: 4rem;
+      padding: 2.5rem 0;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+    .footer-inner p {
+      font-size: 0.8rem;
+      color: var(--text-light);
+      margin: 0;
+      font-family: var(--font-mono);
+    }
+
+    @media (max-width: 768px) {
+      .header-right-group { gap: 1rem; }
+      .nav-links { gap: 1rem; }
+    }
+  </style>
+
+  <script>
+    document.getElementById('theme-toggle')?.addEventListener('click', () => {
+      const curr = document.documentElement.getAttribute('data-theme');
+      const next = curr === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+    });
+  </script>
+</body>
+</html>

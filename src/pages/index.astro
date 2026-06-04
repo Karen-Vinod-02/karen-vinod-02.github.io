@@ -1,17 +1,190 @@
 ---
-
+import Layout from '../layouts/Layout.astro';
+import { Image } from 'astro:assets';
+import profileImg from '../assets/profile.png';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout title="Karen Marlyn Vinod">
+  <div class="standard-page">
+    <section class="hero-section">
+      <div class="hero-text-block">
+        <h1 class="hero-title">Karen Marlyn Vinod</h1>
+        <p class="hero-subtitle">
+          Computer Engineering student at the <a href="https://mu.ac.in" target="_blank" rel="noopener">University of Mumbai</a>.
+        </p>
+        
+        <div class="bio-paragraphs">
+<p>
+  I'm interested in artificial intelligence, multimodal systems, and human-computer interaction.
+</p>
+
+<p>
+  My recent work has involved agentic systems, local AI workflows, and multimodal applications. I've also worked on projects in computer vision.
+</p>
+
+
+        </div>
+
+        <div class="cta-actions-row">
+          <a href="mailto:karen.m.vinod@gmail.com" class="button-primary">Contact</a>
+          <div class="professional-links-row">
+            <a href="https://github.com/karen-vinod-02" target="_blank" rel="noopener" class="social-icon-btn" aria-label="GitHub">
+              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+            </a>
+            <a href="https://linkedin.com/in/karen-m-vinod" target="_blank" rel="noopener" class="social-icon-btn" aria-label="LinkedIn">
+              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-avatar-wrapper">
+        <Image src={profileImg} alt="Karen Marlyn Vinod" class="hero-profile-img" loading="eager" width={360} />
+      </div>
+    </section>
+
+    <section class="updates-section">
+     <h2 class="updates-headline">Recent Updates</h2>
+<ul class="updates-list">
+  <li><span class="update-date">May 2026</span> <span class="update-text">Built Frequence, an agentic music visualizer powered by Qwen 2.5 and AMD MI300X hardware.</span></li>
+  <li><span class="update-date">Jan 2026</span> <span class="update-text">Completed an AI engineering internship at ONGC, working on RAG systems and local LLM workflows.</span></li>
+</ul>
+
+    </section>
+  </div>
+</Layout>
+
+<style>
+  .standard-page { 
+    width: 100%;
+    max-width: 900px; 
+    margin: 0 auto; 
+    padding: 2rem clamp(1rem, 5vw, 2rem); 
+  }
+
+  .hero-section { 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; 
+    gap: clamp(2rem, 5vw, 4rem); 
+    margin-bottom: 5rem; 
+  }
+
+  .hero-text-block { 
+    flex: 1; 
+    min-width: 0; 
+  }
+  
+  .hero-title { 
+    font-size: var(--fs-h1); 
+    margin-bottom: 0.5rem; 
+  }
+  
+  .hero-subtitle { 
+    font-size: 1.15rem; 
+    color: var(--text-light); 
+    margin-bottom: 2rem; 
+  }
+  
+  .bio-paragraphs p { 
+    font-size: var(--fs-body); 
+    line-height: 1.7; 
+    color: var(--text-light); 
+    margin-bottom: 1.25rem; 
+  }
+  
+  .cta-actions-row { 
+    display: flex; 
+    align-items: center; 
+    gap: 1.25rem; 
+    margin-top: 2.5rem; 
+  }
+  
+  .professional-links-row {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .social-icon-btn { 
+    display: inline-flex; 
+    align-items: center; 
+    justify-content: center; 
+    color: var(--text-light); 
+    width: 36px; 
+    height: 36px; 
+    border-radius: 6px; 
+    border: 1px solid var(--border); 
+    background: transparent; 
+    transition: all 0.15s ease; 
+  }
+  
+  .social-icon-btn:hover { 
+    color: var(--text); 
+    background: var(--code-bg); 
+    border-color: var(--text); 
+  }
+
+  /* 3. Fluid Image Sizing - Scaled up for desktop balance */
+  .hero-profile-img { 
+    width: 100%; 
+    max-width: 260px; /* Increased from 180px */
+    height: auto; 
+    aspect-ratio: 1 / 1;
+    border-radius: 50%; 
+    object-fit: cover; 
+    border: 1px solid var(--border); 
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); 
+  }
+
+  .updates-section { 
+    border-top: 1px solid var(--border); 
+    padding-top: 3.5rem; 
+  }
+  
+  .updates-headline { 
+    font-size: var(--fs-h3); 
+    margin-bottom: 1.75rem; 
+  }
+  
+  .updates-list { 
+    list-style: none; 
+    padding: 0; 
+    margin: 0; 
+  }
+  
+  .updates-list li { 
+    margin-bottom: 1.25rem; 
+    display: flex; 
+    align-items: flex-start; 
+    gap: 1rem;
+  }
+  
+  .update-date { 
+    color: var(--text-light); 
+    font-family: var(--font-mono); 
+    font-size: var(--fs-meta); 
+    font-weight: 600; 
+    min-width: 95px; 
+  }
+  
+  .update-text { 
+    color: var(--text); 
+  }
+
+  /* Mobile Breakpoint Constraints */
+  @media (max-width: 768px) {
+    .hero-section {
+      flex-direction: column-reverse;
+      text-align: center;
+    }
+    
+    .cta-actions-row {
+      justify-content: center;
+    }
+    
+    .updates-list li {
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+  }
+</style>

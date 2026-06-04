@@ -1,0 +1,183 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Experience • Karen Marlyn Vinod">
+  <div class="experience-page-wrapper">
+    <header class="experience-header">
+      <h1>Experience</h1>
+      <p class="experience-subtitle">
+        Experience across artificial intelligence, machine learning, and applied research.
+      </p>
+    </header>
+
+    <div class="timeline-container">
+      
+      <div class="timeline-item">
+        <div class="timeline-marker"></div>
+        <div class="timeline-content">
+          <div class="role-header">
+            <h2 class="role-title">Software Engineering Intern</h2>
+            <span class="role-date">Dec 2025 - Jan 2026</span>
+          </div>
+          <h3 class="role-company">Oil and Natural Gas Corporation (ONGC)</h3>
+          <p class="role-description">
+            <p class="role-description">
+            Built a full-stack facility management system with a natural language interface on entirely local infrastructure. The RAG pipeline covered document ingestion, embedding generation, and vector retrieval via LangChain, with multiple LLMs and SLMs evaluated through Ollama using prompt optimization and targeted fine-tuning.
+          </p>
+          <div class="role-tech">
+            <span>Full-Stack Development</span>
+            <span>RAG Integration</span>
+            <span>Systems Architecture</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-marker"></div>
+        <div class="timeline-content">
+          <div class="role-header">
+            <h2 class="role-title">Research Intern</h2>
+            <span class="role-date">Aug 2025 - Sep 2025</span>
+          </div>
+          <h3 class="role-company">Indian Statistical Institute (ISI) Kolkata</h3>
+          <p class="role-description">
+            Research under IDEAS TIH, a DST Government of India initiative. Built end-to-end ML pipelines for fake news detection at scale.
+          </p>
+          <div class="role-tech">
+            <span>Machine Learning</span>
+            <span>Data Analysis</span>
+            <span>Classification Models</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-marker"></div>
+        <div class="timeline-content">
+          <div class="role-header">
+            <h2 class="role-title">Research Intern</h2>
+            <span class="role-date">Jun 2025 - Aug 2025</span>
+          </div>
+          <h3 class="role-company">National Institute of Technology (NIT) Delhi</h3>
+          <p class="role-description">
+            Built a real-time detection pipeline for identifying garbage burning events from CCTV and UAV footage, using YOLOv8 for object detection and DeepLabV3 for scene segmentation. Processed and augmented over 20,000 images across varied urban conditions, cutting training runtime by 20% through workflow optimization.
+          </p>
+          <div class="role-tech">
+            <span>Computer Vision</span>
+            <span>Object Detection</span>
+            <span>Pipeline Optimization</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .experience-page-wrapper {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem clamp(1rem, 5vw, 2rem);
+    box-sizing: border-box;
+  }
+
+  .experience-header { margin-bottom: 4rem; }
+  .experience-subtitle { font-size: var(--fs-body); color: var(--text-light); margin-top: 0.75rem; line-height: 1.6; }
+
+  .timeline-container {
+    position: relative;
+    padding-left: 2rem;
+    border-left: 2px solid var(--border);
+  }
+
+  .timeline-item {
+    position: relative;
+    margin-bottom: 4rem;
+  }
+  
+  .timeline-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .timeline-marker {
+    position: absolute;
+    left: -2.4rem;
+    top: 0.4rem;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 2px solid var(--link);
+    transition: background-color 0.2s ease;
+  }
+
+  .timeline-item:hover .timeline-marker {
+    background: var(--link);
+  }
+
+  .timeline-content {
+    padding-left: 1rem;
+  }
+
+  .role-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .role-title {
+    font-size: 1.25rem;
+    margin: 0;
+    color: var(--text);
+  }
+
+  .role-date {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--text-light);
+    font-weight: 600;
+  }
+
+  .role-company {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--link);
+    margin: 0 0 1.25rem 0;
+  }
+
+  .role-description {
+    font-size: var(--fs-body);
+    line-height: 1.7;
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+  }
+
+  .role-tech {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .role-tech span {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .role-tech span::before {
+    content: "▹";
+    color: var(--link);
+    font-size: 1.1em;
+  }
+</style>

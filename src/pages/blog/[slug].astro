@@ -1,0 +1,1043 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection, render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+
+export const getStaticPaths = (async () => {
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  posts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+  return posts.map((post, index) => ({
+    params: { slug: post.id },
+    props: { 
+      entry: post,
+      prev: index > 0 ? posts[index - 1] : null,
+      next: index < posts.length - 1 ? posts[index + 1] : null
+    },
+  }));
+});
+
+interface Props {
+  entry: CollectionEntry<'blog'>;
+  prev: CollectionEntry<'blog'> | null;
+  next: CollectionEntry<'blog'> | null;
+}
+
+const { entry, prev, next } = Astro.props;
+const { Content, headings } = await render(entry);
+
+const postData = entry.data;
+
+const wordCount = entry.body ? entry.body.split(/\s+/g).length : 0;
+const readingTime = Math.max(1, Math.ceil(wordCount / 200));
+
+const hasBibliography = postData.bibliography && postData.bibliography.length > 0;
+
+const rawBodyText = entry.body || '';
+const needsMermaid = rawBodyText.includes('language-mermaid') || rawBodyText.includes('pre.mermaid') || !!postData.mermaid?.enabled;
+const needsPlotly = rawBodyText.includes('language-plotly');
+---
+
+<Layout 
+  title={`${postData.title} - Karen Vinod`}
+  description={postData.excerpt}
+  image={postData.ogImage ?? '/og-default.jpg'}
+  article={true}
+  pubDate={postData.date.toISOString()}
+>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFas967V2qE" crossorigin="anonymous" />
+
+  <!-- Progress bar: lives OUTSIDE the grid wrapper so it can never be clipped -->
+  <div id="reading-progress-bar" class="top-progress-indicator" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+
+  <!--
+    Mobile TOC: toggle button sits INSIDE the article flow (above the title).
+  -->
+  {headings.length > 0 && (
+    <button id="toc-mobile-toggle" class="toc-mobile-btn" aria-label="Open table of contents" aria-expanded="false">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <line x1="3" y1="12" x2="15" y2="12"/>
+        <line x1="3" y1="18" x2="18" y2="18"/>
+      </svg>
+      Contents
+    </button>
+  )}
+
+  <div id="toc-overlay-backdrop" class="toc-backdrop" aria-hidden="true"></div>
+
+  <div class="toc-drawer" id="toc-drawer" role="dialog" aria-modal="true" aria-label="Table of contents">
+    <div class="toc-drawer-header">
+      <span class="toc-drawer-title">Contents</span>
+      <button id="toc-close-btn" class="toc-close-btn" aria-label="Close table of contents">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    {headings.length > 0 && (
+      <div class="toc-drawer-scroll">
+        <ul class="toc-list" aria-label="Table of contents">
+          {headings.filter(h => h.depth <= 3).map(h => (
+            <li class={`toc-item depth-${h.depth}`} data-heading-id={h.slug}>
+              <a href={`#${h.slug}`} data-toc-link class="toc-anchor-link">
+                {h.text}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </div>
+
+  <!-- Main two-column layout -->
+  <div class="academic-blog-wrapper">
+
+    <!-- Desktop-only sticky sidebar TOC (hidden on mobile via CSS) -->
+    <aside class="academic-toc-column" aria-label="Table of contents sidebar" aria-hidden="true">
+      {headings.length > 0 && (
+        <nav class="toc-sticky-box" aria-label="Article headings">
+          <p class="toc-headline" id="toc-sidebar-heading">Contents</p>
+          <div class="toc-track-container">
+            <ul class="toc-list" aria-labelledby="toc-sidebar-heading">
+              {headings.filter(h => h.depth <= 3).map(h => (
+                <li class={`toc-item depth-${h.depth}`} data-heading-id={h.slug}>
+                  <a href={`#${h.slug}`} data-toc-link class="toc-anchor-link">
+                    {h.text}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </nav>
+      )}
+    </aside>
+
+    <article class="post-core-container">
+      <header class="post-header-block">
+        <h1 class="entry-title">{postData.title}</h1>
+        
+        <div class="entry-meta-strip" aria-label="Post metadata">
+          <div class="meta-cell">
+            <span class="cell-label">Published</span>
+            <time datetime={postData.date.toISOString()}>
+              {postData.date.toISOString().split('T')[0]}
+            </time>
+          </div>
+          <div class="meta-cell">
+            <span class="cell-label">Reading Time</span>
+            <span class="meta-value-text">{readingTime} min read</span>
+          </div>
+          <div class="meta-cell">
+            <span class="cell-label">Topics</span>
+            <div class="tag-row">
+              {postData.tags.map(tag => (
+                <span class="hash-tag">{tag}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="post-body-content">
+        <Content />
+      </div>
+
+      {hasBibliography && postData.bibliography && (
+        <section class="bibliography-section" id="bibliography">
+          <h2>References</h2>
+          <ol class="bibliography-list">
+            {postData.bibliography.map((ref: string, index: number) => (
+              <li id={`ref-${index + 1}`} class="bibliography-item">
+                <span class="bib-number">[{index + 1}]</span>
+                <span class="bib-content">{ref}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
+      <footer class="post-navigation-footer">
+        <div class="footer-meta-row">
+          <span class="license-info">Licensed under <strong>CC BY 4.0</strong> by the author.</span>
+          <div class="share-actions-group">
+            <span class="share-label">SHARE:</span>
+            <button id="copy-btn" class="share-icon-btn" aria-label="Copy link">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+            </button>
+            <a href={`https://x.com/intent/tweet?text=${encodeURIComponent(postData.title)}&url=${encodeURIComponent(Astro.url.href)}`} target="_blank" rel="noopener" class="share-icon-btn" aria-label="Share on X">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+            </a>
+            <a href={`https://bsky.app/intent/compose?text=${encodeURIComponent(postData.title + ' ' + Astro.url.href)}`} target="_blank" rel="noopener" class="share-icon-btn" aria-label="Share on Bluesky">
+              <svg viewBox="0 0 568 501" width="16" height="16" fill="currentColor"><path d="M123.121 33.664C188.241 82.553 258.281 181.68 284 234.873c25.719-53.192 95.759-152.32 160.879-201.209C491.866-1.611 568-28.906 568 57.947c0 17.346-9.945 145.713-15.778 166.555-20.275 72.453-94.155 90.933-159.875 79.748C507.222 323.8 536.444 388.56 473.922 453.32c-119.86 122.992-172.935-30.859-186.181-70.467-2.362-6.953-3.46-10.183-3.741-10.183-.281 0-1.379 3.23-3.741 10.183-13.246 39.608-66.321 193.459-186.181 70.467C31.556 388.56 60.778 323.8 175.653 304.25c-65.72 11.185-139.6-7.295-159.875-79.748C9.945 203.66 0 75.293 0 57.947 0-28.906 76.134-1.611 123.121 33.664z"/></svg>
+            </a>
+            <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(Astro.url.href)}`} target="_blank" rel="noopener" class="share-icon-btn" aria-label="Share on LinkedIn">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            </a>
+            <a href="/rss.xml" class="share-icon-btn" aria-label="RSS Feed">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg>
+            </a>
+            <a href="/feed.json" class="share-icon-btn" aria-label="JSON Feed">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>
+            </a>
+          </div>
+        </div>
+        <nav class="context-navigation"></nav>
+      </footer>
+    </article>
+  </div>
+</Layout>
+
+{needsMermaid && <script type="text/javascript" id="Mermaid-script" async src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>}
+{needsPlotly && <script type="text/javascript" id="Plotly-script" async src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.27.0/plotly.min.js" charset="utf-8"></script>}
+
+<script define:vars={{ needsMermaid, needsPlotly }}>
+  function checkAssetAvailability(globalProperty, callback) {
+    if (window[globalProperty]) { callback(); return; }
+    let attempts = 0;
+    const interval = setInterval(() => {
+      if (window[globalProperty]) { clearInterval(interval); callback(); }
+      else if (++attempts >= 80) { clearInterval(interval); console.warn(`[Asset Subsystem] timeout: ${globalProperty}`); }
+    }, 50);
+  }
+
+  function initializeMermaidDiagrams() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.querySelectorAll('pre code.language-mermaid').forEach((codeBlock) => {
+      const pre = codeBlock.parentElement;
+      if (!pre) return;
+      const wrapper = document.createElement('div');
+      wrapper.className = 'diagram-wrapper';
+      const container = document.createElement('div');
+      container.className = 'mermaid-diagram';
+      container.textContent = codeBlock.textContent;
+      wrapper.appendChild(container);
+      pre.replaceWith(wrapper);
+    });
+    document.querySelectorAll('pre.mermaid').forEach((pre) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'diagram-wrapper';
+      const container = document.createElement('div');
+      container.className = 'mermaid-diagram';
+      container.textContent = pre.textContent;
+      wrapper.appendChild(container);
+      pre.replaceWith(wrapper);
+    });
+    window.mermaid.initialize({ startOnLoad: false, theme: isDark ? 'dark' : 'neutral', securityLevel: 'strict', fontFamily: 'var(--font-body)' });
+    window.mermaid.run({ querySelector: '.mermaid-diagram' });
+  }
+
+  function initializePlotlyCharts() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.querySelectorAll('pre code.language-plotly').forEach((codeBlock) => {
+      const pre = codeBlock.parentElement;
+      if (!pre) return;
+      try {
+        const plotData = JSON.parse(codeBlock.textContent || '{}');
+        const wrapper = document.createElement('div');
+        wrapper.className = 'chart-wrapper';
+        const plotDiv = document.createElement('div');
+        plotDiv.className = 'plotly-chart';
+        const layout = {
+          ...plotData.layout,
+          font: { family: 'var(--font-body)', color: isDark ? '#e5e7eb' : '#374151' },
+          paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+          xaxis: { ...plotData.layout?.xaxis, gridcolor: isDark ? '#374151' : '#e5e7eb' },
+          yaxis: { ...plotData.layout?.yaxis, gridcolor: isDark ? '#374151' : '#e5e7eb' }
+        };
+        wrapper.appendChild(plotDiv);
+        pre.replaceWith(wrapper);
+        window.Plotly.newPlot(plotDiv, plotData.data, layout, { responsive: true, displayModeBar: false });
+      } catch (e) { console.error('Plotly parse error:', e); }
+    });
+  }
+
+  function addCopyButtons() {
+    document.querySelectorAll('.post-body-content pre').forEach(pre => {
+      if (pre.querySelector('.code-block-header') || pre.closest('.diagram-wrapper, .chart-wrapper')) return;
+      const codeBlock = pre.querySelector('code');
+      if (!codeBlock) return;
+      const className = codeBlock.className || '';
+      const preClassName = pre.className || '';
+      const rawText = codeBlock.textContent || '';
+      const normalText = rawText.trim();
+      if (className.includes('mermaid') || preClassName.includes('mermaid') ||
+          className.includes('plotly') || preClassName.includes('plotly') ||
+          normalText.startsWith('graph ') || normalText.startsWith('sequenceDiagram') ||
+          normalText.startsWith('gantt ') || normalText.startsWith('classDiagram')) return;
+      let language = 'text';
+      const attrLang = codeBlock.getAttribute('data-language') || pre.getAttribute('data-language');
+      if (attrLang) {
+        language = attrLang;
+      } else {
+        const fullClass = `${className} ${preClassName}`.toLowerCase();
+        const m = fullClass.match(/shiki-(\w+)/) || fullClass.match(/language-(\w+)/);
+        if (m) language = m[1];
+        else if (preClassName.includes('astro-code')) language = 'code';
+      }
+      const mappedLanguage = language.charAt(0).toUpperCase() + language.slice(1);
+      const wrapper = document.createElement('div');
+      wrapper.className = 'code-block-container';
+      const header = document.createElement('div');
+      header.className = 'code-block-header';
+      const dotsGroup = document.createElement('div');
+      dotsGroup.className = 'code-header-dots';
+      dotsGroup.innerHTML = '<span></span><span></span><span></span>';
+      const langLabel = document.createElement('div');
+      langLabel.className = 'code-language-label';
+      langLabel.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" /></svg> <span>${mappedLanguage}</span>`;
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'copy-code-btn';
+      copyBtn.setAttribute('aria-label', 'Copy code to clipboard');
+      copyBtn.innerHTML = `<svg class="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>`;
+      copyBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(rawText);
+          copyBtn.innerHTML = `<svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+          copyBtn.classList.add('copied');
+          setTimeout(() => {
+            copyBtn.innerHTML = `<svg class="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>`;
+            copyBtn.classList.remove('copied');
+          }, 2000);
+        } catch {
+          copyBtn.classList.add('failed');
+          setTimeout(() => copyBtn.classList.remove('failed'), 2000);
+        }
+      });
+      header.appendChild(dotsGroup);
+      header.appendChild(langLabel);
+      header.appendChild(copyBtn);
+      pre.parentNode?.insertBefore(wrapper, pre);
+      wrapper.appendChild(header);
+      wrapper.appendChild(pre);
+    });
+  }
+
+  function processCitations() {
+    const content = document.querySelector('.post-body-content');
+    if (!content) return;
+    const walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT, {
+      acceptNode: (node) => {
+        if (node.parentElement?.closest('pre, code, .citation-link, a')) return NodeFilter.FILTER_REJECT;
+        return /\[\d+\]/.test(node.textContent || '') ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      }
+    });
+    const nodesToProcess = [];
+    let node;
+    while (node = walker.nextNode()) {
+      const matches = Array.from((node.textContent || '').matchAll(/\[(\d+)\]/g));
+      if (matches.length > 0) nodesToProcess.push({ node, matches });
+    }
+    nodesToProcess.reverse().forEach(({ node, matches }) => {
+      const text = node.textContent || '';
+      const parent = node.parentNode;
+      if (!parent) return;
+      let lastIndex = 0;
+      const fragment = document.createDocumentFragment();
+      matches.forEach(match => {
+        const index = match.index;
+        const citationNum = match[1];
+        if (index !== undefined && index > lastIndex) fragment.appendChild(document.createTextNode(text.slice(lastIndex, index)));
+        const link = document.createElement('a');
+        link.href = `#ref-${citationNum}`;
+        link.className = 'citation-link';
+        link.textContent = `[${citationNum}]`;
+        link.setAttribute('aria-label', `Reference ${citationNum}`);
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const target = document.getElementById(`ref-${citationNum}`);
+          if (target) {
+            window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - 100, behavior: 'smooth' });
+            target.classList.add('highlight-ref');
+            setTimeout(() => target.classList.remove('highlight-ref'), 2500);
+          }
+        });
+        fragment.appendChild(link);
+        if (index !== undefined) lastIndex = index + match[0].length;
+      });
+      if (lastIndex < text.length) fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+      parent.replaceChild(fragment, node);
+    });
+  }
+
+  function runContentPipeline() {
+    if (needsMermaid) checkAssetAvailability('mermaid', initializeMermaidDiagrams);
+    if (needsPlotly) checkAssetAvailability('Plotly', initializePlotlyCharts);
+    addCopyButtons();
+    processCitations();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', runContentPipeline);
+  } else {
+    runContentPipeline();
+  }
+</script>
+
+<script>
+  import { initializeTOC } from '../../lib/toc/index';
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => { initializeTOC(); });
+  } else {
+    initializeTOC();
+  }
+
+  function updateProgressBar() {
+    const bar = document.getElementById('reading-progress-bar');
+    if (!bar) return;
+    const el = document.scrollingElement || document.documentElement;
+    const scrollable = el.scrollHeight - el.clientHeight;
+    const pct = scrollable > 0 ? (el.scrollTop / scrollable) * 100 : 0;
+    bar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+    bar.setAttribute('aria-valuenow', String(Math.round(pct)));
+  }
+  window.addEventListener('scroll', updateProgressBar, { passive: true });
+  updateProgressBar();
+
+  const tocToggle   = document.getElementById('toc-mobile-toggle');
+  const tocDrawer   = document.getElementById('toc-drawer');
+  const tocClose    = document.getElementById('toc-close-btn');
+  const tocBackdrop = document.getElementById('toc-overlay-backdrop');
+
+  function openTOC() {
+    tocDrawer?.classList.add('is-open');
+    tocBackdrop?.classList.add('is-visible');
+    tocToggle?.setAttribute('aria-expanded', 'true');
+    tocToggle?.classList.add('is-hidden');
+    document.body.style.overflow = 'hidden';
+    tocClose?.focus();
+  }
+  function closeTOC() {
+    tocDrawer?.classList.remove('is-open');
+    tocBackdrop?.classList.remove('is-visible');
+    tocToggle?.setAttribute('aria-expanded', 'false');
+    tocToggle?.classList.remove('is-hidden');
+    document.body.style.overflow = '';
+    tocToggle?.focus();
+  }
+
+  tocToggle?.addEventListener('click', openTOC);
+  tocClose?.addEventListener('click', closeTOC);
+  tocBackdrop?.addEventListener('click', closeTOC);
+
+  tocDrawer?.querySelectorAll('[data-toc-link]').forEach(link => {
+    link.addEventListener('click', () => { if (window.innerWidth < 960) closeTOC(); });
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && tocDrawer?.classList.contains('is-open')) closeTOC();
+  });
+
+  document.getElementById('copy-btn')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget as HTMLButtonElement;
+    const orig = btn.innerHTML;
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      btn.innerHTML = `<svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" width="16" height="16"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+      btn.classList.add('copied');
+      setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('copied'); }, 2000);
+    } catch {}
+  });
+</script>
+
+<style is:global>
+  .top-progress-indicator {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: 0%;
+    background: var(--link);
+    z-index: 9999;
+    pointer-events: none;
+    transition: width 0.08s linear;
+  }
+
+  .toc-mobile-btn {
+    /* Hidden on desktop */
+    display: none;
+    position: fixed; /* persists throughout the entire post */
+    bottom: max(1.25rem, env(safe-area-inset-bottom, 1.25rem));
+    left: max(1rem, env(safe-area-inset-left, 1rem));
+    z-index: 300;
+    align-items: center;
+    gap: 0.45rem;
+    background: var(--bg, #fff);
+    border: 1px solid var(--border, #e4e4e7);
+    color: var(--text-light);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.5rem 0.9rem 0.5rem 0.75rem;
+    border-radius: 999px;
+    cursor: pointer;
+    min-height: 36px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1), 0 0 0 1px var(--border);
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.15s, box-shadow 0.15s, transform 0.15s;
+  }
+  .toc-mobile-btn:hover,
+  .toc-mobile-btn:focus-visible {
+    color: var(--text);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.14), 0 0 0 1px var(--text);
+    transform: translateY(-1px);
+  }
+  .toc-mobile-btn:active { transform: translateY(0); }
+  /* Hide FAB while drawer is open */
+  .toc-mobile-btn.is-hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(6px);
+  }
+
+  @media (max-width: 959px) {
+    .toc-mobile-btn { display: inline-flex; }
+  }
+
+  .toc-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 400;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .toc-backdrop.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .toc-drawer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(300px, 82vw);
+    background: var(--bg, #fff);
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 4px 0 32px rgba(0, 0, 0, 0.14);
+    /* Safe area for notch / home bar */
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .toc-drawer.is-open { transform: translateX(0); }
+
+  /* Hide drawer entirely on desktop — sidebar is used there */
+  @media (min-width: 960px) {
+    .toc-drawer { display: none; }
+    .toc-backdrop { display: none; }
+  }
+
+  .toc-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .toc-drawer-title {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    color: var(--text-light);
+  }
+  .toc-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    min-width: 36px;
+    min-height: 36px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .toc-close-btn:hover { color: var(--text); }
+
+  .toc-drawer-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 1rem 1.25rem;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  .code-block-container {
+    margin: 2rem 0;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #121214 !important;
+    border: 1px solid #242427 !important;
+    /* No large box-shadow — it was leaking into the LHS gap */
+  }
+  [data-theme="light"] .code-block-container {
+    background: #fafaf9 !important;
+    border-color: #e4e4e7 !important;
+  }
+
+  .code-block-header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 0.75rem 1.25rem;
+    background: rgba(0,0,0,0.2) !important;
+    border-bottom: 1px solid #242427 !important;
+  }
+  [data-theme="light"] .code-block-header {
+    background: #f4f4f5 !important;
+    border-bottom-color: #e4e4e7 !important;
+  }
+
+  .code-header-dots { display: flex; gap: 6px; }
+  .code-header-dots span { width: 9px; height: 9px; border-radius: 50%; background: #3f3f46 !important; }
+  [data-theme="light"] .code-header-dots span { background: #d4d4d8 !important; }
+
+  .code-language-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.75rem;
+    font-family: var(--font-body);
+    color: #a1a1aa !important;
+    font-weight: 500;
+  }
+  [data-theme="light"] .code-language-label { color: #71717a !important; }
+  .code-language-label svg { width: 13px; height: 13px; }
+
+  .copy-code-btn {
+    justify-self: end;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: #71717a !important;
+    padding: 0.25rem;
+    cursor: pointer;
+    border-radius: 4px;
+    min-width: 32px;
+    min-height: 32px;
+    transition: color 0.15s, background-color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .copy-code-btn:hover { color: #f4f4f5 !important; background: rgba(255,255,255,0.05); }
+  [data-theme="light"] .copy-code-btn:hover { color: #18181b !important; background: rgba(0,0,0,0.04); }
+  .copy-code-btn svg { width: 15px; height: 15px; }
+  .copy-code-btn.copied { color: var(--link) !important; }
+
+  .code-block-container pre {
+    margin: 0 !important;
+    padding: 1.25rem 0 !important;
+    border-radius: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .post-body-content pre code {
+    font-family: var(--font-mono) !important;
+    font-size: 0.875rem !important;
+    line-height: 1.65 !important;
+    color: #e4e4e7 !important;
+    display: block;
+    counter-reset: shiki-lines;
+  }
+  [data-theme="light"] .post-body-content pre code { color: #18181b !important; }
+
+  .post-body-content pre code .line {
+    display: inline-block;
+    width: 100%;
+    padding: 0 1.5rem;
+  }
+  .post-body-content pre code .line::before {
+    counter-increment: shiki-lines;
+    content: counter(shiki-lines);
+    display: inline-block;
+    width: 1.25rem;
+    margin-right: 1.5rem;
+    text-align: right;
+    color: #4b4b54 !important;
+    font-size: 0.8rem;
+    user-select: none;
+  }
+  [data-theme="light"] .post-body-content pre code .line::before { color: #a1a1aa !important; }
+
+  /* diagrams / charts */
+  .diagram-wrapper {
+    margin: 2.5rem 0;
+    padding: 2rem;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mermaid-diagram { display: flex; justify-content: center; align-items: center; min-height: 200px; }
+  .mermaid-diagram svg { max-width: 100%; height: auto; }
+  .chart-wrapper { margin: 2.5rem 0; padding: 1.5rem; background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; }
+  .plotly-chart { min-height: 400px; }
+
+  /* citations */
+  .citation-link {
+    display: inline-block;
+    color: var(--link);
+    text-decoration: none;
+    font-size: 0.85em;
+    font-weight: 600;
+    vertical-align: super;
+    line-height: 0;
+    margin: 0 0.15em;
+    transition: color 0.2s;
+    cursor: pointer;
+  }
+  .citation-link:hover { color: var(--text); text-decoration: underline; }
+
+  .bibliography-item { transition: all 0.3s ease; }
+  .bibliography-item.highlight-ref {
+    background: rgba(10,147,150,0.15) !important;
+    border-color: rgba(10,147,150,0.4) !important;
+    transform: scale(1.01);
+    box-shadow: 0 0 0 2px rgba(10,147,150,0.2);
+  }
+  .post-body-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2.5rem 0;
+    font-size: var(--fs-meta);
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .post-body-content thead { background: rgba(0,0,0,0.03); border-bottom: 2px solid var(--border); }
+  [data-theme="dark"] .post-body-content thead { background: rgba(255,255,255,0.03); }
+  .post-body-content th { padding: 0.875rem 1rem; text-align: left; font-weight: 600; color: var(--text); text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem; white-space: nowrap; }
+  .post-body-content td { padding: 0.75rem 1rem; border-top: 1px solid var(--border); color: var(--text-light); }
+  .post-body-content tbody tr:hover { background: rgba(0,0,0,0.02); }
+  [data-theme="dark"] .post-body-content tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+  .post-body-content figure { margin: 2.5rem 0; text-align: center; }
+  .post-body-content figure img { max-width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--border); }
+  .post-body-content figcaption { margin-top: 0.75rem; font-size: var(--fs-meta); color: var(--text-light); font-style: italic; }
+
+  .post-body-content ul, .post-body-content ol { margin: 1.5rem 0; padding-left: 2rem; }
+  .post-body-content li { margin-bottom: 0.75rem; line-height: 1.7; }
+  .post-body-content ul { list-style-type: disc; }
+  .post-body-content ol { list-style-type: decimal; }
+  .post-body-content img { max-width: 100%; height: auto; }
+
+  .post-body-content .callout {
+    margin: 2rem 0;
+    padding: 1.25rem 1.5rem;
+    border-left: 3px solid var(--link);
+    background: var(--code-bg);
+    border-radius: 0 6px 6px 0;
+  }
+</style>
+
+<style>
+  html { scroll-behavior: smooth; }
+
+  /* ─────────────────────────────────────────────────────────────
+     LAYOUT
+     On mobile: single column. 
+     On desktop (≥960px): two-column grid.
+     ───────────────────────────────────────────────────────────── */
+  .academic-blog-wrapper {
+    display: grid;
+    /* Single column on mobile*/
+    grid-template-columns: 1fr;
+    width: 100%;
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 3rem 1rem 4rem;
+    box-sizing: border-box;
+    /* prevent any child from creating horizontal overflow */
+    overflow-x: hidden;
+  }
+
+  @media (min-width: 960px) {
+    .academic-blog-wrapper {
+      grid-template-columns: 220px 1fr;
+      gap: 4rem;
+      padding: 4rem clamp(1rem, 4vw, 2rem);
+      overflow-x: visible;
+    }
+  }
+
+  /* DESKTOP SIDEBAR TOC
+     Completely absent from layout on mobile */
+  .academic-toc-column {
+    display: none;
+  }
+  @media (min-width: 960px) {
+    .academic-toc-column {
+      display: block;
+    }
+  }
+
+  .toc-sticky-box {
+    position: sticky;
+    top: 6.5rem;
+    max-height: calc(100vh - 8rem);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 0.5rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .toc-sticky-box::-webkit-scrollbar { width: 4px; }
+  .toc-sticky-box::-webkit-scrollbar-track { background: transparent; }
+  .toc-sticky-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .toc-headline {
+    font-size: 0.687rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    color: var(--text-light);
+    margin: 0 0 1.25rem;
+    padding-left: 0.75rem;
+  }
+
+  .toc-track-container { position: relative; }
+
+  ul.toc-list {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-left: 1px solid var(--border);
+  }
+
+  .toc-item { margin-bottom: 0.1rem; position: relative; }
+  .toc-item.depth-2 { padding-left: 0.75rem; }
+  .toc-item.depth-3 { padding-left: 1.75rem; }
+
+  .toc-anchor-link {
+    color: var(--text-light);
+    text-decoration: none;
+    font-size: 0.83rem;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 0.3rem 0.75rem;
+    line-height: 1.4;
+    min-height: 32px;
+    transition: color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .toc-anchor-link:hover { color: var(--text); }
+  .toc-anchor-link.active-toc { color: var(--link); font-weight: 500; }
+
+  .toc-item::after {
+    content: '';
+    position: absolute;
+    left: -1px;
+    top: 0;
+    height: 100%;
+    width: 2px;
+    background: transparent;
+    transition: background-color 0.15s;
+  }
+  .toc-item:has(a.active-toc)::after { background: var(--link); }
+
+  /* ARTICLE */
+  .post-core-container {
+    width: 100%;
+    min-width: 0; /* prevent grid blowout */
+    max-width: 72ch;
+  }
+
+  .post-header-block { margin-top: 0; margin-bottom: 2.5rem; }
+
+  .entry-title {
+    font-size: clamp(1.5rem, 5vw, 2.25rem);
+    margin: 0 0 1.75rem;
+    line-height: 1.15;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  .entry-meta-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 1.5rem;
+    padding: 1rem 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .meta-cell { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; min-width: 110px; }
+
+  .cell-label {
+    font-size: 0.63rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    color: var(--text-light);
+  }
+
+  .meta-cell time, .meta-value-text { color: var(--text-light); font-size: var(--fs-meta); }
+
+  .tag-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .hash-tag { color: var(--text-light); font-family: var(--font-mono); font-size: var(--fs-meta); }
+  .hash-tag::before { content: "#"; opacity: 0.7; }
+
+  .post-body-content {
+    font-size: var(--fs-body);
+    color: var(--text);
+    line-height: 1.75;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  .post-body-content p { margin-bottom: 1.75rem; }
+
+  .post-body-content h2,
+  .post-body-content h3,
+  .post-body-content h4 { scroll-margin-top: 5.5rem; overflow-wrap: break-word; }
+
+  .post-body-content h2 {
+    font-size: clamp(1.2rem, 4vw, 1.75rem);
+    margin: 3.5rem 0 1.25rem;
+    font-weight: 700;
+  }
+  .post-body-content h3 {
+    font-size: clamp(1.05rem, 3.5vw, 1.35rem);
+    margin: 2.5rem 0 1rem;
+    font-weight: 600;
+  }
+  .post-body-content h4 { font-size: 1.1rem; margin: 2rem 0 0.875rem; font-weight: 600; }
+
+  .post-body-content a {
+    color: var(--link);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  .post-body-content :not(pre) > code {
+    background: var(--code-bg);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.875em !important;
+    color: var(--text);
+    font-family: var(--font-mono) !important;
+    word-break: break-all;
+  }
+
+  .post-body-content blockquote {
+    margin: 2.5rem 0;
+    padding: 1.25rem 1.75rem;
+    border-left: 4px solid var(--text);
+    background: var(--code-bg);
+    border-radius: 0 6px 6px 0;
+    font-style: italic;
+  }
+  .post-body-content blockquote p { color: var(--text-light); }
+
+  .post-body-content mark {
+    background-color: rgba(10,147,150,0.15);
+    color: var(--text);
+    padding: 0.15rem 0.35rem;
+    border-radius: 3px;
+    font-weight: 500;
+  }
+
+  .bibliography-section { margin-top: 5rem; padding-top: 3rem; border-top: 2px solid var(--border); }
+  .bibliography-section h2 { scroll-margin-top: 5.5rem; }
+  .bibliography-list { list-style: none; padding: 0; margin: 2rem 0 0; }
+  .bibliography-item {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    padding: 1rem 1.25rem;
+    background: var(--code-bg);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    transition: all 0.3s;
+  }
+  .bib-number { font-family: var(--font-mono); font-weight: 600; color: var(--link); flex-shrink: 0; }
+  .bib-content { color: var(--text-light); font-size: var(--fs-meta); line-height: 1.6; overflow-wrap: break-word; word-break: break-word; }
+
+  .post-navigation-footer { margin-top: 2rem; }
+  .footer-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.5rem;
+    padding: 1rem 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin: 3rem 0;
+    font-size: 0.85rem;
+    color: var(--text-light);
+  }
+  .share-label { font-weight: 800; letter-spacing: 0.05em; color: var(--text); margin-right: 0.25rem; }
+  .share-actions-group { display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem 1rem; }
+  .share-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px; height: 32px;
+    background: none; border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    padding: 0;
+    border-radius: 4px;
+    transition: color 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .share-icon-btn:hover { color: var(--link); }
+  .share-icon-btn.copied { color: var(--link); }
+
+  .context-navigation { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+
+  @media (max-width: 600px) {
+    .context-navigation { grid-template-columns: 1fr; }
+    .bibliography-item { flex-direction: column; gap: 0.5rem; }
+    .footer-meta-row { flex-direction: column; align-items: flex-start; }
+  }
+
+  .nav-box a {
+    display: flex; flex-direction: column;
+    padding: 1.25rem;
+    border: 1px solid var(--border);
+    text-decoration: none;
+    height: 100%; box-sizing: border-box;
+    border-radius: 6px;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .nav-box.next { text-align: right; }
+  .nav-box a:hover { border-color: var(--text); background: var(--code-bg); }
+  .context-label { font-size: 0.75rem; color: var(--text-light); text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.05em; font-weight: 600; }
+  .context-title { font-weight: 600; font-size: var(--fs-body); color: var(--text); line-height: 1.3; }
+
+  /* safe-area padding for iPhones */
+  @media (max-width: 480px) {
+    .academic-blog-wrapper {
+      padding-left: max(1rem, env(safe-area-inset-left));
+      padding-right: max(1rem, env(safe-area-inset-right));
+    }
+    .diagram-wrapper { padding: 1rem; }
+  }
+</style>
