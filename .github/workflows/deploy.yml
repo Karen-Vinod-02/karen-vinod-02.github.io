@@ -34,8 +34,7 @@ jobs:
       - name: Check links
         uses: lycheeverse/lychee-action@v2
         with:
-          args: --verbose --no-progress --base "$GITHUB_WORKSPACE/dist" --accept 200,404 "$GITHUB_WORKSPACE/dist/**/*.html"
-          lycheeVersion: "0.18.1"
+          args: --verbose --no-progress --root-dir "$GITHUB_WORKSPACE/dist" --accept 200,404 "$GITHUB_WORKSPACE/dist/**/*.html"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
