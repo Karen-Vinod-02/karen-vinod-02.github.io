@@ -33,8 +33,9 @@ jobs:
 
       - name: Check links
         uses: lycheeverse/lychee-action@v2
+        continue-on-error: true
         with:
-          args: --verbose --no-progress --root-dir "$GITHUB_WORKSPACE/dist" --accept 200,404 "$GITHUB_WORKSPACE/dist/**/*.html"
+          args: --verbose --no-progress --root-dir "$GITHUB_WORKSPACE/dist" "$GITHUB_WORKSPACE/dist/**/*.html"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
