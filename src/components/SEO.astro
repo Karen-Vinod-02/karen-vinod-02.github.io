@@ -30,6 +30,7 @@ const socialImageURL = new URL(image, siteUrl);
 <title>{title}</title>
 <meta name="title" content={title} />
 <meta name="description" content={description} />
+<meta name="author" content="Karen Marlyn Vinod" />
 <meta name="robots" content="index, follow" />
 
 <meta property="og:site_name" content="Karen Marlyn Vinod" />
@@ -55,5 +56,23 @@ const socialImageURL = new URL(image, siteUrl);
     {pubDate && <meta property="article:published_time" content={pubDate} />}
     <meta property="article:author" content="Karen Marlyn Vinod" />
     <meta property="article:section" content="Computer Engineering" />
+
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "headline": title,
+        "description": description,
+        "image": socialImageURL.toString(),
+        "url": canonicalURL.toString(),
+        "author": {
+          "@type": "Person",
+          "name": "Karen Marlyn Vinod",
+          "url": siteUrl
+        },
+        ...(pubDate ? { "datePublished": pubDate } : {})
+      })}
+    />
   </>
 )}

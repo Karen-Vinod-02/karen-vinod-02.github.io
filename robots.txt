@@ -5,6 +5,9 @@ Disallow: /
 User-agent: ClaudeBot
 Disallow: /
 
+User-agent: Google-Extended
+Disallow: /
+
 # AI Answer Engines 
 User-agent: PerplexityBot
 Allow: /

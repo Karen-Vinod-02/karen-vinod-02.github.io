@@ -10,7 +10,7 @@ interface Props {
   pubDate?: string;
 }
 
-const { title = "Karen Vinod", description = "Computer Engineering ", image, article, pubDate } = Astro.props;
+const { title = "Karen M Vinod", description = "Computer Engineering ", image, article, pubDate } = Astro.props;
 
 const base = import.meta.env.BASE_URL;
 const currentPath = Astro.url.pathname;
@@ -22,6 +22,7 @@ const formatPath = (path: string) => `${base}${path}`.replace(/\/+/g, '/');
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="google-site-verification" content="OrUr1_wY6Iru15WCucMle_xJfxdsHlWgibGnAA7vhFE" />
   <SEO title={title} description={description} image={image} article={article} pubDate={pubDate} />
 
   <script is:inline>
