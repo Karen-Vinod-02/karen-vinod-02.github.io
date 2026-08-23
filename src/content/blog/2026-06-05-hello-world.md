@@ -1,7 +1,7 @@
 ---
 title: "Hello, World"
-date: 2026-06-04
-excerpt: "The first post on my website and a brief introduction to what I'll be writing about."
+date: 2026-06-05
+excerpt: "First post introducing the website and what I plan to write about."
 tags: ["introduction", "blog"]
 draft: false
 ---
